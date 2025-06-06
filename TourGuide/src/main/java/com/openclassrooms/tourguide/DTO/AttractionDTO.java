@@ -1,35 +1,72 @@
 package com.openclassrooms.tourguide.DTO;
 
-import gpsUtil.location.Attraction;
-
 public class AttractionDTO {
-    private Attraction attraction;
-    private double distance;
+    private String attractionName;
+    private double attractionLatitude;
+    private double attractionLongitude;
+    private double userLatitude;
+    private double userLongitude;
+    private double distanceInMiles;
     private double rewardsPoint;
 
-    public AttractionDTO() {
-    }
+    public AttractionDTO() { }
 
-    public AttractionDTO(Attraction attraction, double distance, double rewardsPoint) {
-        this.attraction = attraction;
-        this.distance = distance;
+    public AttractionDTO(String attractionName, double attractionLatitude, double attractionLongitude, double userLatitude, double userLongitude, double distanceInMiles, double rewardsPoint) {
+        this.attractionName = attractionName;
+        this.attractionLatitude = attractionLatitude;
+        this.attractionLongitude = attractionLongitude;
+        this.userLatitude = userLatitude;
+        this.userLongitude = userLongitude;
+        this.distanceInMiles = distanceInMiles;
         this.rewardsPoint = rewardsPoint;
     }
 
-    public Attraction getAttraction() {
-        return attraction;
+    public String getAttractionName() {
+        return attractionName;
     }
 
-    public void setAttraction(Attraction attraction) {
-        this.attraction = attraction;
+    public void setAttractionName(String attractionName) {
+        this.attractionName = attractionName;
+    }
+
+    public double getAttractionLatitude() {
+        return attractionLatitude;
+    }
+
+    public void setAttractionLatitude(double attractionLatitude) {
+        this.attractionLatitude = attractionLatitude;
+    }
+
+    public double getAttractionLongitude() {
+        return attractionLongitude;
+    }
+
+    public void setAttractionLongitude(double attractionLongitude) {
+        this.attractionLongitude = attractionLongitude;
+    }
+
+    public double getUserLatitude() {
+        return userLatitude;
+    }
+
+    public void setUserLatitude(double userLatitude) {
+        this.userLatitude = userLatitude;
+    }
+
+    public double getUserLongitude() {
+        return userLongitude;
+    }
+
+    public void setUserLongitude(double userLongitude) {
+        this.userLongitude = userLongitude;
     }
 
     public double getDistance() {
-        return distance;
+        return distanceInMiles;
     }
 
-    public void setDistance(double distance) {
-        this.distance = distance;
+    public void setDistance(double distanceInMiles) {
+        this.distanceInMiles = distanceInMiles;
     }
 
     public double getRewardsPoint() {

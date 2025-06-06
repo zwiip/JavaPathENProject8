@@ -21,17 +21,15 @@ import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
 
-import rewardCentral.RewardCentral;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
 @Service
 public class TourGuideService {
-	private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
+	private final Logger logger = LoggerFactory.getLogger(TourGuideService.class);
 	private final GpsUtil gpsUtil;
 	private final RewardsService rewardsService;
 	private final TripPricer tripPricer = new TripPricer();
-	private final RewardCentral rewardCentral;
 	public final Tracker tracker;
 	boolean testMode = true;
 
@@ -69,6 +67,17 @@ public class TourGuideService {
 		return internalUserMap.values().stream().collect(Collectors.toList());
 	}
 
+	public User getUserByUIID(UUID userId) {
+		User currentUser;
+		List<User> users = getAllUsers();
+		for (User user : users) {
+			if (user.getUserId().equals(userId)) {
+				return user;
+			}
+		}
+		return null;
+	}
+
 	public void addUser(User user) {
 		if (!internalUserMap.containsKey(user.getUserName())) {
 			internalUserMap.put(user.getUserName(), user);
@@ -91,18 +100,38 @@ public class TourGuideService {
 		return visitedLocation;
 	}
 
-	/*
-		TODO : calculer les récompenses
+	/**
+	 * Fetch the attractions and the User rewardsPoints,
+	 * Calculate the distance between user and attractions,
+	 * Sort by distance in miles and return the five closest.
+	 * @param visitedLocation the user location
+	 * @return a list of 5 AttractionDTO objects
+	 * 			(attraction's name, latitude and longitude, and the user's latitude, longitude and rewardPoints for this attraction.)
 	 */
-	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
+	public List<AttractionDTO> getNearByAttractions(VisitedLocation visitedLocation) {
 		List<AttractionDTO> nearbyAttractions = new ArrayList<>();
 		List<Attraction> attractions = gpsUtil.getAttractions();
+		User user = getUserByUIID(visitedLocation.userId);
+		rewardsService.calculateRewards(user);
 
 		for (Attraction attraction : attractions) {
-			AttractionDTO attractionDTO = new AttractionDTO(
-					attraction,
-					rewardsService.getDistance(attraction, visitedLocation.location),
+			double rewardPoints = 0;
 
+			for (UserReward reward : user.getUserRewards()) {
+				if (reward.attraction.attractionName.equals(attraction.attractionName)) {
+					rewardPoints = reward.getRewardPoints();
+					break;
+				}
+			}
+
+			AttractionDTO attractionDTO = new AttractionDTO(
+					attraction.attractionName,
+					attraction.latitude,
+					attraction.longitude,
+					visitedLocation.location.latitude,
+					visitedLocation.location.longitude,
+					rewardsService.getDistance(attraction, visitedLocation.location),
+					rewardPoints
 			);
 			nearbyAttractions.add(attractionDTO);
 		}
@@ -110,7 +139,6 @@ public class TourGuideService {
 		return nearbyAttractions.stream()
 				.sorted(Comparator.comparingDouble(AttractionDTO::getDistance))
 				.limit(5)
-				.map(AttractionDTO::getAttraction)
 				.toList();
 	}
 

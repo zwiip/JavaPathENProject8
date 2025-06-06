@@ -9,6 +9,7 @@ import com.openclassrooms.tourguide.user.UserReward;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -93,10 +94,16 @@ public class TourGuideService {
 		return providers;
 	}
 
+	/**
+	 * Retrieves the user's current location and add it to his locations history.
+	 * Asynchronously triggers the reward calculation process.
+	 * @param user the current user whose location is being tracked.
+	 * @return the user's current location, with its locations history updated.
+	 */
 	public VisitedLocation trackUserLocation(User user) {
 		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
 		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
+		CompletableFuture.runAsync(() -> rewardsService.calculateRewards(user));
 		return visitedLocation;
 	}
 

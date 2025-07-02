@@ -41,6 +41,15 @@ public class RewardsService {
 		proximityBuffer = defaultProximityBuffer;
 	}
 
+	/**
+	 * Retrieves the visitedLocations of a user and all the attractions.
+	 * For each pair of objects "VisitedLocation - Attraction" :
+	 * 		- check if the user has not already gotten the reward
+	 * 		- check if the Attraction is among the 5 closest to the user
+	 * 	If the condition are checked, add a reward to the User
+	 * @param user the current user whose rewards are being calculated
+	 * @return a CompletableFuture void object
+	 */
 	public CompletableFuture<Void> calculateRewards(User user) {
 		List<VisitedLocation> userLocations = user.getVisitedLocations();
 		CompletableFuture<List<Attraction>> attractions = CompletableFuture

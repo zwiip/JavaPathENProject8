@@ -97,7 +97,7 @@ public class TourGuideService {
 	}
 
 	/**
-	 * Retrieves the user's current location and adds it to his locations history.
+	 * Retrieves the user's current location and adds it to his locations' history.
 	 * Triggers the reward calculation process.
 	 * @param user the current user whose location is being tracked.
 	 * @return a CompletableFuture object that will fill with the user location's history

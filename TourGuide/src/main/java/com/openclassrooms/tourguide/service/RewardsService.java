@@ -44,13 +44,14 @@ public class RewardsService {
 	public CompletableFuture<Void> calculateRewards(User user) {
 		List<VisitedLocation> userLocations = user.getVisitedLocations();
 		CompletableFuture<List<Attraction>> attractions = CompletableFuture
-				.supplyAsync(() -> gpsUtil.getAttractions(), executorService);
+				.supplyAsync(gpsUtil::getAttractions, executorService);
 
 		return CompletableFuture
 				.runAsync(() ->  {
 					for(VisitedLocation visitedLocation : userLocations) {
 						for(Attraction attraction : attractions.join()) {
-							if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName)) && nearAttraction(visitedLocation, attraction)) {
+							if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))
+									&& nearAttraction(visitedLocation, attraction)) {
 								user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
 							}
 						}
@@ -80,8 +81,7 @@ public class RewardsService {
                                + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2));
 
         double nauticalMiles = 60 * Math.toDegrees(angle);
-        double statuteMiles = STATUTE_MILES_PER_NAUTICAL_MILE * nauticalMiles;
-        return statuteMiles;
+        return STATUTE_MILES_PER_NAUTICAL_MILE * nauticalMiles;
 	}
 
 }

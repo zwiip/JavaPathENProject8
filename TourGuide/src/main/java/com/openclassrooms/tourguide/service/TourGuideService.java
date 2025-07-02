@@ -10,11 +10,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import gpsUtil.GpsUtil;
@@ -33,10 +35,12 @@ public class TourGuideService {
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
+	private final ExecutorService executorService;
 
-	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
+	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService, @Qualifier("executorServiceBean") ExecutorService executorService) {
 		this.gpsUtil = gpsUtil;
 		this.rewardsService = rewardsService;
+		this.executorService = executorService;
 		
 		Locale.setDefault(Locale.US);
 
@@ -55,9 +59,8 @@ public class TourGuideService {
 	}
 
 	public VisitedLocation getUserLocation(User user) {
-		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
-				: trackUserLocation(user);
-		return visitedLocation;
+		return (user.getVisitedLocations().isEmpty()) ? user.getLastVisitedLocation()
+				: trackUserLocation(user).join();
 	}
 
 	public User getUser(String userName) {
@@ -69,7 +72,6 @@ public class TourGuideService {
 	}
 
 	public User getUserByUIID(UUID userId) {
-		User currentUser;
 		List<User> users = getAllUsers();
 		for (User user : users) {
 			if (user.getUserId().equals(userId)) {
@@ -95,16 +97,19 @@ public class TourGuideService {
 	}
 
 	/**
-	 * Retrieves the user's current location and add it to his locations history.
-	 * Asynchronously triggers the reward calculation process.
+	 * Retrieves the user's current location and adds it to his locations history.
+	 * Triggers the reward calculation process.
 	 * @param user the current user whose location is being tracked.
-	 * @return the user's current location, with its locations history updated.
+	 * @return a CompletableFuture object that will fill with the user location's history
 	 */
-	public VisitedLocation trackUserLocation(User user) {
-		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-		user.addToVisitedLocations(visitedLocation);
-		CompletableFuture.runAsync(() -> rewardsService.calculateRewards(user));
-		return visitedLocation;
+	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
+		return CompletableFuture
+			.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId()), executorService)
+			.thenApplyAsync(visitedLocation -> {
+				user.addToVisitedLocations(visitedLocation);
+				rewardsService.calculateRewards(user);
+				return visitedLocation;
+			}, executorService);
 	}
 
 	/**

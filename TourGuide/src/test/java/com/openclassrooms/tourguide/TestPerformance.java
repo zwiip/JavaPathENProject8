@@ -1,5 +1,6 @@
 package com.openclassrooms.tourguide;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -52,8 +53,8 @@ public class TestPerformance {
 	@Test
 	public void highVolumeTrackLocation() {
 		GpsUtil gpsUtil = new GpsUtil();
-		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		ExecutorService executorService = Executors.newFixedThreadPool(1000);
+		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral(), executorService);
 
 		// Users should be incremented up to 100,000, and test finishes within 15
 		// minutes
@@ -81,16 +82,15 @@ public class TestPerformance {
 		assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
 	}
 
-	@Disabled
 	@Test
 	public void highVolumeGetRewards() {
 		GpsUtil gpsUtil = new GpsUtil();
-		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
-		ExecutorService executorService = Executors.newFixedThreadPool(100);
+		ExecutorService executorService = Executors.newFixedThreadPool(1000);
+		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral(), executorService);
 
 		// Users should be incremented up to 100,000, and test finishes within 20
 		// minutes
-		InternalTestHelper.setInternalUserNumber(100);
+		InternalTestHelper.setInternalUserNumber(100000);
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, executorService);
@@ -100,10 +100,14 @@ public class TestPerformance {
 		allUsers = tourGuideService.getAllUsers();
 		allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(), attraction, new Date())));
 
-		allUsers.forEach(u -> rewardsService.calculateRewards(u));
+		List<CompletableFuture<Void>> rewardsFutures = allUsers.stream()
+				.map(rewardsService::calculateRewards)
+				.toList();
+
+		rewardsFutures.forEach(CompletableFuture::join);
 
 		for (User user : allUsers) {
-			assertTrue(user.getUserRewards().size() > 0);
+            assertFalse(user.getUserRewards().isEmpty());
 		}
 		stopWatch.stop();
 		tourGuideService.tracker.stopTracking();

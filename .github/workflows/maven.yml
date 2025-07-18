@@ -18,7 +18,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+
+    - name: Install local dependencies
+      run: |
+        mvn install:install-file -Dfile=path/to/gpsUtil-1.0.0.jar -DgroupId=gpsUtil -DartifactId=gpsUtil -Dversion=1.0.0 -Dpackaging=jar
+        mvn install:install-file -Dfile=path/to/tripPricer-1.0.0.jar -DgroupId=tripPricer -DartifactId=tripPricer -Dversion=1.0.0 -Dpackaging=jar
+        mvn install:install-file -Dfile=path/to/rewardCentral-1.0.0.jar -DgroupId=rewardCentral -DartifactId=rewardCentral -Dversion=1.0.0 -Dpackaging=jar
+    
     - name: Build with Maven
       run: |
         cd TourGuide
-        mvn -B package -Dtest=!com.openclassrooms.tourguide.TestPerformance --file pom.xml
+        mvn -B package -Dtest=!com.openclassrooms.tourguide.TestPerformance

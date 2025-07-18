@@ -13,7 +13,7 @@ jobs:
   
     strategy:
       matrix:
-         nbUsers: [10, 100]
+         nbUsers: [100, 500, 1000, 100000]
          
     steps:
     - uses: actions/checkout@v4

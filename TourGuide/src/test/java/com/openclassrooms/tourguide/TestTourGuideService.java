@@ -8,7 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.openclassrooms.tourguide.DTO.AttractionDTO;
+import com.openclassrooms.tourguide.dto.AttractionDTO;
 import org.junit.jupiter.api.Test;
 
 import gpsUtil.GpsUtil;

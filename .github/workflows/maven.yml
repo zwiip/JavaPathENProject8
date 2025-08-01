@@ -36,4 +36,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: TourGuide-artifact
-        path: target/*.jar
+        path: TourGuide/target/*.jar
